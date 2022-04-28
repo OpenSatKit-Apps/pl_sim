@@ -35,7 +35,7 @@
 /*******************************/
 
 static int32 InitApp(void);
-static int32 ProcessCommandPipe(void);
+static int32 ProcessCommands(void);
 static void SendStatusTlm(void);
 
 
@@ -64,40 +64,34 @@ PL_SIM_Class_t  PlSim;
 void PL_SIM_AppMain(void)
 {
 
-   int32  Status    = CFE_SEVERITY_ERROR;
-   uint32 RunStatus = CFE_ES_APP_ERROR;
+   uint32 RunStatus = CFE_ES_RunStatus_APP_ERROR;
+ 
+   CFE_EVS_Register(NULL, 0, CFE_EVS_NO_FILTER);
 
-   Status = CFE_ES_RegisterApp();
+   if (InitApp() == CFE_SUCCESS) /* Performs initial CFE_ES_PerfLogEntry() call */
+   {  
    
-   if (Status == CFE_SUCCESS)
-   {
+      RunStatus = CFE_ES_RunStatus_APP_RUN;
       
-      CFE_EVS_Register(NULL, 0, CFE_EVS_BINARY_FILTER);
+   }
 
-      Status = InitApp();
-   
-      if (Status == CFE_SUCCESS)
-      {
-         
-         RunStatus = CFE_ES_APP_RUN;
-         
-      }
-   
-   } /* End if RegisterApp() success */
-   
    /*
    ** Main process loop
    */
    while (CFE_ES_RunLoop(&RunStatus))
    {
 
-      RunStatus = ProcessCommandPipe();
+      /*
+      ** ProcessCommands() pends indefinitely. The scheduler sends a message 
+      ** to manage science files.
+      */
+      RunStatus = ProcessCommands();
       
    } /* End CFE_ES_RunLoop */
 
-   CFE_ES_WriteToSysLog("PL_SIM App terminating, err = 0x%08X\n", Status);   /* Use SysLog, events may not be working */
+   CFE_ES_WriteToSysLog("PL_SIM App terminating, err = 0x%08X\n", RunStatus);   /* Use SysLog, events may not be working */
 
-   CFE_EVS_SendEvent(PL_SIM_EXIT_EID, CFE_EVS_CRITICAL, "PL_SIM App terminating, err = 0x%08X", Status);
+   CFE_EVS_SendEvent(PL_SIM_EXIT_EID, CFE_EVS_EventType_CRITICAL, "PL_SIM App terminating, err = 0x%08X", RunStatus);
 
    CFE_ES_ExitApp(RunStatus);  /* Let cFE kill the task (and any child tasks) */
 
@@ -108,14 +102,14 @@ void PL_SIM_AppMain(void)
 ** Function: PL_SIM_NoOpCmd
 **
 */
-boolean PL_SIM_NoOpCmd(void* ObjDataPtr, const CFE_SB_MsgPtr_t MsgPtr)
+bool PL_SIM_NoOpCmd(void* ObjDataPtr, const CFE_SB_Buffer_t* SbBufPtr)
 {
 
-   CFE_EVS_SendEvent (PL_SIM_NOOP_EID, CFE_EVS_INFORMATION,
+   CFE_EVS_SendEvent (PL_SIM_NOOP_CMD_EID, CFE_EVS_EventType_INFORMATION,
                       "No operation command received for PL_SIM App version %d.%d.%d",
                       PL_SIM_MAJOR_VER, PL_SIM_MINOR_VER, PL_SIM_PLATFORM_REV);
 
-   return TRUE;
+   return true;
 
 
 } /* End PL_SIM_NoOpCmd() */
@@ -129,14 +123,14 @@ boolean PL_SIM_NoOpCmd(void* ObjDataPtr, const CFE_SB_MsgPtr_t MsgPtr)
 **      reentrant. Applications use the singleton pattern and store a
 **      reference pointer to the object data during construction.
 */
-boolean PL_SIM_ResetAppCmd(void* ObjDataPtr, const CFE_SB_MsgPtr_t MsgPtr)
+bool PL_SIM_ResetAppCmd(void* ObjDataPtr, const CFE_SB_Buffer_t* SbBufPtr)
 {
 
    CMDMGR_ResetStatus(CMDMGR_OBJ);
    
    /* Leave the PL_SIM library state intact */
 	  
-   return TRUE;
+   return true;
 
 } /* End PL_SIM_ResetAppCmd() */
 
@@ -150,20 +144,20 @@ boolean PL_SIM_ResetAppCmd(void* ObjDataPtr, const CFE_SB_MsgPtr_t MsgPtr)
 **  1. This function must comply with the CMDMGR_CmdFuncPtr definition
 **  2. The PL_SIM_LIB outputs an event message power state transitions
 */
-boolean PL_SIM_PowerOnCmd(void* DataObjPtr, const CFE_SB_MsgPtr_t MsgPtr)
+bool PL_SIM_PowerOnCmd(void* DataObjPtr, const CFE_SB_Buffer_t* SbBufPtr)
 {
 
-   boolean RetStatus = FALSE;
+   bool RetStatus = false;
 
    if (PlSim.Lib.State.Power == PL_SIM_LIB_POWER_OFF)
    {
       PL_SIM_LIB_PowerOn();      
-      RetStatus = TRUE;
+      RetStatus = true;
    
    }  
    else
    { 
-      CFE_EVS_SendEvent (PL_SIM_PWR_ON_CMD_ERR_EID, CFE_EVS_ERROR, 
+      CFE_EVS_SendEvent (PL_SIM_PWR_ON_CMD_ERR_EID, CFE_EVS_EventType_ERROR, 
                          "Power on payload cmd rejected. Payload must be in OFF state and it's in the %s state.",
                          PL_SIM_LIB_GetPowerStateStr(PlSim.Lib.State.Power));
    }
@@ -184,12 +178,12 @@ boolean PL_SIM_PowerOnCmd(void* DataObjPtr, const CFE_SB_MsgPtr_t MsgPtr)
 **  1. This function must comply with the CMDMGR_CmdFuncPtr definition
 **  2. The PL_SIM library outputs an event message power state transitions
 */
-boolean PL_SIM_PowerOffCmd(void* DataObjPtr, const CFE_SB_MsgPtr_t MsgPtr)
+bool PL_SIM_PowerOffCmd(void* DataObjPtr, const CFE_SB_Buffer_t* SbBufPtr)
 {
 
    PL_SIM_LIB_PowerOff();
       
-   return TRUE;
+   return true;
 
 } /* End PL_SIM_PowerOffCmd() */
 
@@ -204,20 +198,20 @@ boolean PL_SIM_PowerOffCmd(void* DataObjPtr, const CFE_SB_MsgPtr_t MsgPtr)
 **  1. This function must comply with the CMDMGR_CmdFuncPtr definition
 **  2. The PL_SIM library outputs an event message power state transitions
 */
-boolean PL_SIM_PowerResetCmd (void* DataObjPtr, const CFE_SB_MsgPtr_t MsgPtr)
+bool PL_SIM_PowerResetCmd (void* DataObjPtr, const CFE_SB_Buffer_t* SbBufPtr)
 {
 
-   boolean RetStatus = FALSE;
+   bool RetStatus = false;
 
    if (PlSim.Lib.State.Power == PL_SIM_LIB_POWER_READY)
    {
       PL_SIM_LIB_PowerReset();
-      RetStatus = TRUE;
+      RetStatus = true;
    
    }  
    else
    { 
-      CFE_EVS_SendEvent (PL_SIM_PWR_RESET_CMD_ERR_EID, CFE_EVS_ERROR, 
+      CFE_EVS_SendEvent (PL_SIM_PWR_RESET_CMD_ERR_EID, CFE_EVS_EventType_ERROR, 
                          "Reset payload power cmd rejected. Payload must be in READY state and it's in the %s state.",
                          PL_SIM_LIB_GetPowerStateStr(PlSim.Lib.State.Power));
    }
@@ -235,15 +229,15 @@ boolean PL_SIM_PowerResetCmd (void* DataObjPtr, const CFE_SB_MsgPtr_t MsgPtr)
 ** Note:
 **  1. This function must comply with the CMDMGR_CmdFuncPtr definition
 */
-boolean PL_SIM_SetFaultCmd (void* DataObjPtr, const CFE_SB_MsgPtr_t MsgPtr)
+bool PL_SIM_SetFaultCmd (void* DataObjPtr, const CFE_SB_Buffer_t* SbBufPtr)
 {
    
    PL_SIM_LIB_SetFault();
 
-   CFE_EVS_SendEvent (PL_SIM_SET_FAULT_CMD_EID, CFE_EVS_INFORMATION, 
+   CFE_EVS_SendEvent (PL_SIM_SET_FAULT_CMD_EID, CFE_EVS_EventType_INFORMATION, 
                       "Payload fault set to TRUE.");
                
-   return TRUE;
+   return true;
 
 } /* End PL_SIM_SetFaultCmd() */
 
@@ -256,15 +250,15 @@ boolean PL_SIM_SetFaultCmd (void* DataObjPtr, const CFE_SB_MsgPtr_t MsgPtr)
 ** Note:
 **  1. This function must comply with the CMDMGR_CmdFuncPtr definition
 */
-boolean PL_SIM_ClearFaultCmd (void* DataObjPtr, const CFE_SB_MsgPtr_t MsgPtr)
+bool PL_SIM_ClearFaultCmd (void* DataObjPtr, const CFE_SB_Buffer_t* SbBufPtr)
 {
    
    PL_SIM_LIB_ClearFault();
 
-   CFE_EVS_SendEvent (PL_SIM_CLEAR_FAULT_CMD_EID, CFE_EVS_INFORMATION, 
+   CFE_EVS_SendEvent (PL_SIM_CLEAR_FAULT_CMD_EID, CFE_EVS_EventType_INFORMATION, 
                       "Payload fault set to FALSE.");
                
-   return TRUE;
+   return true;
 
 } /* End PL_SIM_ClearFaultCmd() */
 
@@ -295,8 +289,9 @@ static void SendStatusTlm(void)
    PlSim.StatusTlm.LibDetectorReadoutRow = PlSim.Lib.Detector.ReadoutRow;
    PlSim.StatusTlm.LibDetectorImageCnt   = PlSim.Lib.Detector.ImageCnt;
 
-   CFE_SB_TimeStampMsg((CFE_SB_Msg_t *) &PlSim.StatusTlm);
-   CFE_SB_SendMsg((CFE_SB_Msg_t *) &PlSim.StatusTlm);
+
+   CFE_SB_TimeStampMsg(CFE_MSG_PTR(PlSim.StatusTlm.TelemetryHeader));
+   CFE_SB_TransmitMsg(CFE_MSG_PTR(PlSim.StatusTlm.TelemetryHeader), true);
 
 } /* End SendStatusTlm() */
 
@@ -317,9 +312,9 @@ static int32 InitApp(void)
    if (INITBL_Constructor(&PlSim.IniTbl, PL_SIM_INI_FILENAME, &IniCfgEnum))
    {
    
-      PlSim.CmdMid      = (CFE_SB_MsgId_t)INITBL_GetIntConfig(INITBL_OBJ, CFG_CMD_MID);
-      PlSim.ExecuteMid  = (CFE_SB_MsgId_t)INITBL_GetIntConfig(INITBL_OBJ, CFG_EXECUTE_MID);
-      PlSim.TlmSlowRate = (CFE_SB_MsgId_t)INITBL_GetIntConfig(INITBL_OBJ, CFG_TLM_SLOW_RATE);
+      PlSim.CmdMid      = CFE_SB_ValueToMsgId(INITBL_GetIntConfig(INITBL_OBJ, CFG_CMD_MID));
+      PlSim.ExecuteMid  = CFE_SB_ValueToMsgId(INITBL_GetIntConfig(INITBL_OBJ, CFG_EXECUTE_MID));
+      PlSim.TlmSlowRate = INITBL_GetIntConfig(INITBL_OBJ, CFG_TLM_SLOW_RATE);
 
       Status = CFE_SUCCESS; 
   
@@ -355,12 +350,12 @@ static int32 InitApp(void)
       ** Initialize app messages 
       */
  
-      CFE_SB_InitMsg(&PlSim.StatusTlm, (CFE_SB_MsgId_t)INITBL_GetIntConfig(INITBL_OBJ, CFG_TLM_MID), PL_SIM_APP_STATUS_TLM_LEN, TRUE);
+      CFE_MSG_Init(CFE_MSG_PTR(PlSim.StatusTlm.TelemetryHeader), CFE_SB_ValueToMsgId(INITBL_GetIntConfig(INITBL_OBJ, CFG_TLM_MID)), sizeof(PL_SIM_StatusTlm_t));
 
       /*
       ** Application startup event message
       */
-      CFE_EVS_SendEvent(PL_SIM_INIT_APP_EID, CFE_EVS_INFORMATION,
+      CFE_EVS_SendEvent(PL_SIM_INIT_APP_EID, CFE_EVS_EventType_INFORMATION,
                         "PL_SIM App Initialized. Version %d.%d.%d",
                         PL_SIM_MAJOR_VER, PL_SIM_MINOR_VER, PL_SIM_PLATFORM_REV);
                         
@@ -372,69 +367,83 @@ static int32 InitApp(void)
 
 
 /******************************************************************************
-** Function: ProcessCommandPipe
+** Function: ProcessCommands
 **
-** 
 */
-static int32 ProcessCommandPipe(void)
+static int32 ProcessCommands(void)
 {
-   
-   int32           SbStatus;
-   int32           RetStatus = CFE_ES_APP_RUN;
-   CFE_SB_Msg_t*   CmdMsgPtr;
-   CFE_SB_MsgId_t  MsgId;
 
-   SbStatus = CFE_SB_RcvMsg(&CmdMsgPtr, PlSim.CmdPipe, CFE_SB_PEND_FOREVER);
+   int32  RetStatus = CFE_ES_RunStatus_APP_RUN;
+   int32  SysStatus;
 
-   if (SbStatus == CFE_SUCCESS)
+   CFE_SB_Buffer_t* SbBufPtr;
+   CFE_SB_MsgId_t   MsgId = CFE_SB_INVALID_MSG_ID;
+
+
+   SysStatus = CFE_SB_ReceiveBuffer(&SbBufPtr, PlSim.CmdPipe, CFE_SB_PEND_FOREVER);
+
+   if (SysStatus == CFE_SUCCESS)
    {
-
-      MsgId = CFE_SB_GetMsgId(CmdMsgPtr);
-
-      if (MsgId == PlSim.CmdMid)
+      
+      SysStatus = CFE_MSG_GetMsgId(&SbBufPtr->Msg, &MsgId);
+   
+      if (SysStatus == CFE_SUCCESS)
       {
-
-         CMDMGR_DispatchFunc(CMDMGR_OBJ, CmdMsgPtr);
+  
+         if (CFE_SB_MsgId_Equal(MsgId, PlSim.CmdMid)) 
+         {
             
-      } 
-      else if (MsgId == PlSim.ExecuteMid)
-      {
+            CMDMGR_DispatchFunc(CMDMGR_OBJ, SbBufPtr);
+         
+         } 
+         else if (CFE_SB_MsgId_Equal(MsgId, PlSim.ExecuteMid))
+         {
 
-         PL_SIM_LIB_ExecuteStep();
-         PL_SIM_LIB_ReadState(&PlSim.Lib);
-         if (PlSim.Lib.State.Power != PL_SIM_LIB_POWER_OFF)
-         {
-            SendStatusTlm();
-         }
-         else
-         {
-            if (PlSim.TlmSlowRateCnt >= PlSim.TlmSlowRate)
+
+            PL_SIM_LIB_ExecuteStep();
+            PL_SIM_LIB_ReadState(&PlSim.Lib);
+            if (PlSim.Lib.State.Power != PL_SIM_LIB_POWER_OFF)
             {
                SendStatusTlm();
-               PlSim.TlmSlowRateCnt = 0;
             }
             else
             {
-               PlSim.TlmSlowRateCnt++;
+               if (PlSim.TlmSlowRateCnt >= PlSim.TlmSlowRate)
+               {
+                  SendStatusTlm();
+                  PlSim.TlmSlowRateCnt = 0;
+               }
+               else
+               {
+                  PlSim.TlmSlowRateCnt++;
+               }
             }
          }
+         else
+         {
+            
+            CFE_EVS_SendEvent(PL_SIM_INVALID_CMD_EID, CFE_EVS_EventType_ERROR,
+                              "Received invalid command packet, MID = 0x%08X",
+                              CFE_SB_MsgIdToValue(MsgId));
+         } 
 
       }
       else
       {
-            
-         CFE_EVS_SendEvent(PL_SIM_INVALID_MID_EID, CFE_EVS_ERROR,
-                           "Received invalid command packet,MID = 0x%4X",MsgId);
+         
+         CFE_EVS_SendEvent(PL_SIM_INVALID_CMD_EID, CFE_EVS_EventType_ERROR,
+                           "CFE couldn't retrieve message ID from the message, Status = %d", SysStatus);
       }
-
-   } /* End if SB received a packet */
-   else
+      
+   } /* Valid SB receive */ 
+   else 
    {
+   
+         CFE_ES_WriteToSysLog("PL_SIM software bus error. Status = 0x%08X\n", SysStatus);   /* Use SysLog, events may not be working */
+         RetStatus = CFE_ES_RunStatus_APP_ERROR;
+   }  
       
-      RetStatus = CFE_ES_APP_ERROR;
-      
-   } /* End if SB failure */
-
    return RetStatus;
    
-} /* End ProcessCommandPipe() */
+} /* End ProcessCommands() */
+

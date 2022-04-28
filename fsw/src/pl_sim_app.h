@@ -2,9 +2,8 @@
 ** Purpose: Define the Payload Simulator application
 **
 ** Notes:
-**   1. Demonstrates an application using the OSK C Framework. It also serves
-**      as the final app that is developed during the Code-As-You-Go(CAYG)
-**      app development tutorial.
+**   1. PL_SIM does not use performance monitor IDs because simulator apps
+**      are not part of a flight build.
 **
 ** References:
 **   1. OpenSat Application Developer's Guide
@@ -34,9 +33,9 @@
 */
 
 #define PL_SIM_INIT_APP_EID          (PL_SIM_BASE_EID +  0)
-#define PL_SIM_NOOP_EID              (PL_SIM_BASE_EID +  1)
+#define PL_SIM_NOOP_CMD_EID          (PL_SIM_BASE_EID +  1)
 #define PL_SIM_EXIT_EID              (PL_SIM_BASE_EID +  2)
-#define PL_SIM_INVALID_MID_EID       (PL_SIM_BASE_EID +  3)
+#define PL_SIM_INVALID_CMD_EID       (PL_SIM_BASE_EID +  3)
 #define PL_SIM_PWR_ON_CMD_EID        (PL_SIM_BASE_EID +  4)
 #define PL_SIM_PWR_ON_CMD_ERR_EID    (PL_SIM_BASE_EID +  5)
 #define PL_SIM_PWR_OFF_CMD_EID       (PL_SIM_BASE_EID +  6)
@@ -73,28 +72,27 @@
 typedef struct
 {
 
-   uint8    Header[CFE_SB_TLM_HDR_SIZE];
+   CFE_MSG_TelemetryHeader_t TelemetryHeader;
 
    /*
    ** CMDMGR Data
    */
    
-   uint16   ValidCmdCnt;
-   uint16   InvalidCmdCnt;
+   uint16  ValidCmdCnt;
+   uint16  InvalidCmdCnt;
    
    /*
    ** PL_SIM Library Data
    */
 
-   uint8    LibPwrState;
-   uint8    LibPwrInitCycleCnt;
-   uint8    LibPwrResetCycleCnt;
-   boolean  LibDetectorFault;
-   uint16   LibDetectorReadoutRow;
-   uint16   LibDetectorImageCnt;
+   uint8   LibPwrState;
+   uint8   LibPwrInitCycleCnt;
+   uint8   LibPwrResetCycleCnt;
+   bool    LibDetectorFault;
+   uint16  LibDetectorReadoutRow;
+   uint16  LibDetectorImageCnt;
    
-} OS_PACK PL_SIM_StatusTlm_t;
-#define PL_SIM_APP_STATUS_TLM_LEN sizeof(PL_SIM_StatusTlm_t)
+} PL_SIM_StatusTlm_t;
 
 
 /******************************************************************************
@@ -107,9 +105,9 @@ typedef struct
    ** App Framework
    */ 
    
-   INITBL_Class    IniTbl; 
+   INITBL_Class_t  IniTbl; 
    CFE_SB_PipeId_t CmdPipe;
-   CMDMGR_Class    CmdMgr;
+   CMDMGR_Class_t  CmdMgr;
    
    /*
    ** Telemetry Packets
@@ -155,14 +153,15 @@ void PL_SIM_AppMain(void);
 ** Function: PL_SIM_NoOpCmd
 **
 */
-boolean PL_SIM_NoOpCmd(void* ObjDataPtr, const CFE_SB_MsgPtr_t MsgPtr);
+bool PL_SIM_NoOpCmd(void* ObjDataPtr, const CFE_SB_Buffer_t* SbBufPtr);
 
 
 /******************************************************************************
 ** Function: PL_SIM_ResetAppCmd
 **
 */
-boolean PL_SIM_ResetAppCmd(void* ObjDataPtr, const CFE_SB_MsgPtr_t MsgPtr);
+bool PL_SIM_ResetAppCmd(void* ObjDataPtr, const CFE_SB_Buffer_t* SbBufPtr);
+
 
 /******************************************************************************
 ** Functions: PL_SIM_PwrOnCmd, PL_SIM_PwrOffCmd, PL_SIM_PwrResetCmd
@@ -178,9 +177,9 @@ boolean PL_SIM_ResetAppCmd(void* ObjDataPtr, const CFE_SB_MsgPtr_t MsgPtr);
 **     science data may be allowed to resume immediately after a reset.
 **
 */
-boolean PL_SIM_PowerOnCmd (void* DataObjPtr, const CFE_SB_MsgPtr_t MsgPtr);
-boolean PL_SIM_PowerOffCmd(void* DataObjPtr, const CFE_SB_MsgPtr_t MsgPtr);
-boolean PL_SIM_PowerResetCmd(void* DataObjPtr, const CFE_SB_MsgPtr_t MsgPtr);
+bool PL_SIM_PowerOnCmd (void* DataObjPtr,   const CFE_SB_Buffer_t* SbBufPtr);
+bool PL_SIM_PowerOffCmd(void* DataObjPtr,   const CFE_SB_Buffer_t* SbBufPtr);
+bool PL_SIM_PowerResetCmd(void* DataObjPtr, const CFE_SB_Buffer_t* SbBufPtr);
 
 
 /******************************************************************************
@@ -194,8 +193,8 @@ boolean PL_SIM_PowerResetCmd(void* DataObjPtr, const CFE_SB_MsgPtr_t MsgPtr);
 **     command with a parameter that would need validation
 **
 */
-boolean PL_SIM_SetFaultCmd (void* DataObjPtr, const CFE_SB_MsgPtr_t MsgPtr);
-boolean PL_SIM_ClearFaultCmd (void* DataObjPtr, const CFE_SB_MsgPtr_t MsgPtr);
+bool PL_SIM_SetFaultCmd (void* DataObjPtr,   const CFE_SB_Buffer_t* SbBufPtr);
+bool PL_SIM_ClearFaultCmd (void* DataObjPtr, const CFE_SB_Buffer_t* SbBufPtr);
 
 
 #endif /* _pl_sim_app_ */

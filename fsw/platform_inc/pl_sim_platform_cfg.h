@@ -30,6 +30,6 @@
 */
 
 #define PL_SIM_PLATFORM_REV   0
-#define PL_SIM_INI_FILENAME   "/cf/pl_sim_app_ini.json"
+#define PL_SIM_INI_FILENAME   "/cf/pl_sim_ini.json"
 
 #endif /* _pl_sim_platform_cfg_ */
