@@ -21,14 +21,14 @@
 ** Command Message IDs
 */
 
-#define  PL_SIM_CMD_MID        0x1F30
-#define  PL_SIM_SEND_HK_MID    0x1F31
+#define  PL_SIM_CMD_MID    0x1864  /* 6244 */
+#define  PL_SIM_EXE_MID    0x1865
 
 
 /*
 ** Telemetry Message IDs
 */
 
-#define  PL_SIM_TLM_HK_MID     0x0F30  /* Housekeeping */
+#define  PL_SIM_TLM_MID    0x0861  /* 2145 */ 
 
 #endif /* _pl_sim_msgids_ */
