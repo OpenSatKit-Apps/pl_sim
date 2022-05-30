@@ -153,14 +153,14 @@ void PL_SIM_AppMain(void);
 ** Function: PL_SIM_NoOpCmd
 **
 */
-bool PL_SIM_NoOpCmd(void* ObjDataPtr, const CFE_SB_Buffer_t* SbBufPtr);
+bool PL_SIM_NoOpCmd(void* ObjDataPtr, const CFE_MSG_Message_t *MsgPtr);
 
 
 /******************************************************************************
 ** Function: PL_SIM_ResetAppCmd
 **
 */
-bool PL_SIM_ResetAppCmd(void* ObjDataPtr, const CFE_SB_Buffer_t* SbBufPtr);
+bool PL_SIM_ResetAppCmd(void* ObjDataPtr, const CFE_MSG_Message_t *MsgPtr);
 
 
 /******************************************************************************
@@ -177,9 +177,9 @@ bool PL_SIM_ResetAppCmd(void* ObjDataPtr, const CFE_SB_Buffer_t* SbBufPtr);
 **     science data may be allowed to resume immediately after a reset.
 **
 */
-bool PL_SIM_PowerOnCmd (void* DataObjPtr,   const CFE_SB_Buffer_t* SbBufPtr);
-bool PL_SIM_PowerOffCmd(void* DataObjPtr,   const CFE_SB_Buffer_t* SbBufPtr);
-bool PL_SIM_PowerResetCmd(void* DataObjPtr, const CFE_SB_Buffer_t* SbBufPtr);
+bool PL_SIM_PowerOnCmd (void* DataObjPtr,   const CFE_MSG_Message_t *MsgPtr);
+bool PL_SIM_PowerOffCmd(void* DataObjPtr,   const CFE_MSG_Message_t *MsgPtr);
+bool PL_SIM_PowerResetCmd(void* DataObjPtr, const CFE_MSG_Message_t *MsgPtr);
 
 
 /******************************************************************************
@@ -193,8 +193,8 @@ bool PL_SIM_PowerResetCmd(void* DataObjPtr, const CFE_SB_Buffer_t* SbBufPtr);
 **     command with a parameter that would need validation
 **
 */
-bool PL_SIM_SetFaultCmd (void* DataObjPtr,   const CFE_SB_Buffer_t* SbBufPtr);
-bool PL_SIM_ClearFaultCmd (void* DataObjPtr, const CFE_SB_Buffer_t* SbBufPtr);
+bool PL_SIM_SetFaultCmd (void* DataObjPtr,   const CFE_MSG_Message_t *MsgPtr);
+bool PL_SIM_ClearFaultCmd (void* DataObjPtr, const CFE_MSG_Message_t *MsgPtr);
 
 
 #endif /* _pl_sim_app_ */

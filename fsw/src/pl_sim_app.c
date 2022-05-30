@@ -102,7 +102,7 @@ void PL_SIM_AppMain(void)
 ** Function: PL_SIM_NoOpCmd
 **
 */
-bool PL_SIM_NoOpCmd(void* ObjDataPtr, const CFE_SB_Buffer_t* SbBufPtr)
+bool PL_SIM_NoOpCmd(void* ObjDataPtr, const CFE_MSG_Message_t *MsgPtr)
 {
 
    CFE_EVS_SendEvent (PL_SIM_NOOP_CMD_EID, CFE_EVS_EventType_INFORMATION,
@@ -123,7 +123,7 @@ bool PL_SIM_NoOpCmd(void* ObjDataPtr, const CFE_SB_Buffer_t* SbBufPtr)
 **      reentrant. Applications use the singleton pattern and store a
 **      reference pointer to the object data during construction.
 */
-bool PL_SIM_ResetAppCmd(void* ObjDataPtr, const CFE_SB_Buffer_t* SbBufPtr)
+bool PL_SIM_ResetAppCmd(void* ObjDataPtr, const CFE_MSG_Message_t *MsgPtr)
 {
 
    CMDMGR_ResetStatus(CMDMGR_OBJ);
@@ -144,7 +144,7 @@ bool PL_SIM_ResetAppCmd(void* ObjDataPtr, const CFE_SB_Buffer_t* SbBufPtr)
 **  1. This function must comply with the CMDMGR_CmdFuncPtr definition
 **  2. The PL_SIM_LIB outputs an event message power state transitions
 */
-bool PL_SIM_PowerOnCmd(void* DataObjPtr, const CFE_SB_Buffer_t* SbBufPtr)
+bool PL_SIM_PowerOnCmd(void* DataObjPtr, const CFE_MSG_Message_t *MsgPtrr)
 {
 
    bool RetStatus = false;
@@ -178,7 +178,7 @@ bool PL_SIM_PowerOnCmd(void* DataObjPtr, const CFE_SB_Buffer_t* SbBufPtr)
 **  1. This function must comply with the CMDMGR_CmdFuncPtr definition
 **  2. The PL_SIM library outputs an event message power state transitions
 */
-bool PL_SIM_PowerOffCmd(void* DataObjPtr, const CFE_SB_Buffer_t* SbBufPtr)
+bool PL_SIM_PowerOffCmd(void* DataObjPtr, const CFE_MSG_Message_t *MsgPtr)
 {
 
    PL_SIM_LIB_PowerOff();
@@ -198,7 +198,7 @@ bool PL_SIM_PowerOffCmd(void* DataObjPtr, const CFE_SB_Buffer_t* SbBufPtr)
 **  1. This function must comply with the CMDMGR_CmdFuncPtr definition
 **  2. The PL_SIM library outputs an event message power state transitions
 */
-bool PL_SIM_PowerResetCmd (void* DataObjPtr, const CFE_SB_Buffer_t* SbBufPtr)
+bool PL_SIM_PowerResetCmd (void* DataObjPtr, const CFE_MSG_Message_t *MsgPtr)
 {
 
    bool RetStatus = false;
@@ -229,7 +229,7 @@ bool PL_SIM_PowerResetCmd (void* DataObjPtr, const CFE_SB_Buffer_t* SbBufPtr)
 ** Note:
 **  1. This function must comply with the CMDMGR_CmdFuncPtr definition
 */
-bool PL_SIM_SetFaultCmd (void* DataObjPtr, const CFE_SB_Buffer_t* SbBufPtr)
+bool PL_SIM_SetFaultCmd (void* DataObjPtr, const CFE_MSG_Message_t *MsgPtr)
 {
    
    PL_SIM_LIB_SetFault();
@@ -250,7 +250,7 @@ bool PL_SIM_SetFaultCmd (void* DataObjPtr, const CFE_SB_Buffer_t* SbBufPtr)
 ** Note:
 **  1. This function must comply with the CMDMGR_CmdFuncPtr definition
 */
-bool PL_SIM_ClearFaultCmd (void* DataObjPtr, const CFE_SB_Buffer_t* SbBufPtr)
+bool PL_SIM_ClearFaultCmd (void* DataObjPtr, const CFE_MSG_Message_t *MsgPtr)
 {
    
    PL_SIM_LIB_ClearFault();
@@ -393,7 +393,7 @@ static int32 ProcessCommands(void)
          if (CFE_SB_MsgId_Equal(MsgId, PlSim.CmdMid)) 
          {
             
-            CMDMGR_DispatchFunc(CMDMGR_OBJ, SbBufPtr);
+            CMDMGR_DispatchFunc(CMDMGR_OBJ, &SbBufPtr->Msg);
          
          } 
          else if (CFE_SB_MsgId_Equal(MsgId, PlSim.ExecuteMid))
