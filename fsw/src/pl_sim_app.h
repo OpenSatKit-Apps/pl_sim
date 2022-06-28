@@ -1,17 +1,28 @@
 /*
-** Purpose: Define the Payload Simulator application
+**  Copyright 2022 bitValence, Inc.
+**  All Rights Reserved.
 **
-** Notes:
-**   1. PL_SIM does not use performance monitor IDs because simulator apps
-**      are not part of a flight build.
+**  This program is free software; you can modify and/or redistribute it
+**  under the terms of the GNU Affero General Public License
+**  as published by the Free Software Foundation; version 3 with
+**  attribution addendums as found in the LICENSE.txt
 **
-** References:
-**   1. OpenSat Application Developer's Guide
-**   2. cFS Application Developer's Guide
+**  This program is distributed in the hope that it will be useful,
+**  but WITHOUT ANY WARRANTY; without even the implied warranty of
+**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+**  GNU Affero General Public License for more details.
 **
-** License:
-**   Written by David McComas, licensed under the copyleft GNU
-**   General Public License (GPL). 
+**  Purpose:
+**    Define the Payload Simulator application
+**
+**  Notes:
+**    1. PL_SIM does not use performance monitor IDs because simulator apps
+**       are not part of a flight build.
+**
+**  References:
+**    1. OpenSatKit Object-based Application Developer's Guide.
+**    2. cFS Application Developer's Guide.
+**
 */
 #ifndef _pl_sim_app_
 #define _pl_sim_app_
@@ -157,14 +168,7 @@ bool PL_SIM_NoOpCmd(void* ObjDataPtr, const CFE_MSG_Message_t *MsgPtr);
 
 
 /******************************************************************************
-** Function: PL_SIM_ResetAppCmd
-**
-*/
-bool PL_SIM_ResetAppCmd(void* ObjDataPtr, const CFE_MSG_Message_t *MsgPtr);
-
-
-/******************************************************************************
-** Functions: PL_SIM_PwrOnCmd, PL_SIM_PwrOffCmd, PL_SIM_PwrResetCmd
+** Functions: PL_SIM_PowerOnCmd, PL_SIM_PowerOffCmd, PL_SIM_PowerResetCmd
 **
 ** Power on/off/reset payload.
 **
@@ -180,6 +184,13 @@ bool PL_SIM_ResetAppCmd(void* ObjDataPtr, const CFE_MSG_Message_t *MsgPtr);
 bool PL_SIM_PowerOnCmd (void* DataObjPtr,   const CFE_MSG_Message_t *MsgPtr);
 bool PL_SIM_PowerOffCmd(void* DataObjPtr,   const CFE_MSG_Message_t *MsgPtr);
 bool PL_SIM_PowerResetCmd(void* DataObjPtr, const CFE_MSG_Message_t *MsgPtr);
+
+
+/******************************************************************************
+** Function: PL_SIM_ResetAppCmd
+**
+*/
+bool PL_SIM_ResetAppCmd(void* ObjDataPtr, const CFE_MSG_Message_t *MsgPtr);
 
 
 /******************************************************************************

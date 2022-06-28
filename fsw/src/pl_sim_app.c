@@ -1,16 +1,27 @@
 /*
-** Purpose: Implement the Payload Simulator application
+**  Copyright 2022 bitValence, Inc.
+**  All Rights Reserved.
 **
-** Notes:
-**   1. See header notes. 
+**  This program is free software; you can modify and/or redistribute it
+**  under the terms of the GNU Affero General Public License
+**  as published by the Free Software Foundation; version 3 with
+**  attribution addendums as found in the LICENSE.txt
 **
-** References:
-**   1. OpenSat Application Developer's Guide
-**   2. cFS Application Developer's Guide
+**  This program is distributed in the hope that it will be useful,
+**  but WITHOUT ANY WARRANTY; without even the implied warranty of
+**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+**  GNU Affero General Public License for more details.
 **
-** License:
-**   Written by David McComas, licensed under the copyleft GNU
-**   General Public License (GPL). 
+**  Purpose:
+**    Implement the Payload Simulator application
+**
+**  Notes:
+**    1. See header notes. 
+**
+**  References:
+**    1. OpenSatKit Object-based Application Developer's Guide.
+**    2. cFS Application Developer's Guide.
+**
 */
 
 /*
@@ -99,6 +110,27 @@ void PL_SIM_AppMain(void)
 
 
 /******************************************************************************
+** Functions: PL_SIM_ClearFaultCmd
+**
+** Set instrument fault state to FALSE.
+**
+** Note:
+**  1. This function must comply with the CMDMGR_CmdFuncPtr definition
+*/
+bool PL_SIM_ClearFaultCmd (void* DataObjPtr, const CFE_MSG_Message_t *MsgPtr)
+{
+   
+   PL_SIM_LIB_ClearFault();
+
+   CFE_EVS_SendEvent (PL_SIM_CLEAR_FAULT_CMD_EID, CFE_EVS_EventType_INFORMATION, 
+                      "Payload fault set to FALSE.");
+               
+   return true;
+
+} /* End PL_SIM_ClearFaultCmd() */
+
+
+/******************************************************************************
 ** Function: PL_SIM_NoOpCmd
 **
 */
@@ -116,23 +148,24 @@ bool PL_SIM_NoOpCmd(void* ObjDataPtr, const CFE_MSG_Message_t *MsgPtr)
 
 
 /******************************************************************************
-** Function: PL_SIM_ResetAppCmd
+** Functions: PL_SIM_PowerOffCmd
 **
-** Notes:
-**   1. Framework objects require an object reference since they are
-**      reentrant. Applications use the singleton pattern and store a
-**      reference pointer to the object data during construction.
+** Power off science instrument regardless of current state. The science state
+** is unmodified and the PL_SIM_Execute() function takes care of any science
+** data cleanup activities.
+**
+** Note:
+**  1. This function must comply with the CMDMGR_CmdFuncPtr definition
+**  2. The PL_SIM library outputs an event message power state transitions
 */
-bool PL_SIM_ResetAppCmd(void* ObjDataPtr, const CFE_MSG_Message_t *MsgPtr)
+bool PL_SIM_PowerOffCmd(void* DataObjPtr, const CFE_MSG_Message_t *MsgPtr)
 {
 
-   CMDMGR_ResetStatus(CMDMGR_OBJ);
-   
-   /* Leave the PL_SIM library state intact */
-	  
+   PL_SIM_LIB_PowerOff();
+      
    return true;
 
-} /* End PL_SIM_ResetAppCmd() */
+} /* End PL_SIM_PowerOffCmd() */
 
 
 /******************************************************************************
@@ -165,27 +198,6 @@ bool PL_SIM_PowerOnCmd(void* DataObjPtr, const CFE_MSG_Message_t *MsgPtrr)
    return RetStatus;
 
 } /* End PL_SIM_PowerOnCmd() */
-
-
-/******************************************************************************
-** Functions: PL_SIM_PowerOffCmd
-**
-** Power off science instrument regardless of current state. The science state
-** is unmodified and the PL_SIM_Execute() function takes care of any science
-** data cleanup activities.
-**
-** Note:
-**  1. This function must comply with the CMDMGR_CmdFuncPtr definition
-**  2. The PL_SIM library outputs an event message power state transitions
-*/
-bool PL_SIM_PowerOffCmd(void* DataObjPtr, const CFE_MSG_Message_t *MsgPtr)
-{
-
-   PL_SIM_LIB_PowerOff();
-      
-   return true;
-
-} /* End PL_SIM_PowerOffCmd() */
 
 
 /******************************************************************************
@@ -222,6 +234,26 @@ bool PL_SIM_PowerResetCmd (void* DataObjPtr, const CFE_MSG_Message_t *MsgPtr)
 
 
 /******************************************************************************
+** Function: PL_SIM_ResetAppCmd
+**
+** Notes:
+**   1. Framework objects require an object reference since they are
+**      reentrant. Applications use the singleton pattern and store a
+**      reference pointer to the object data during construction.
+*/
+bool PL_SIM_ResetAppCmd(void* ObjDataPtr, const CFE_MSG_Message_t *MsgPtr)
+{
+
+   CMDMGR_ResetStatus(CMDMGR_OBJ);
+   
+   /* Leave the PL_SIM library state intact */
+	  
+   return true;
+
+} /* End PL_SIM_ResetAppCmd() */
+
+
+/******************************************************************************
 ** Functions: PL_SIM_SetFaultCmd
 **
 ** Set instrument fault state to TRUE.
@@ -240,60 +272,6 @@ bool PL_SIM_SetFaultCmd (void* DataObjPtr, const CFE_MSG_Message_t *MsgPtr)
    return true;
 
 } /* End PL_SIM_SetFaultCmd() */
-
-
-/******************************************************************************
-** Functions: PL_SIM_ClearFaultCmd
-**
-** Set instrument fault state to FALSE.
-**
-** Note:
-**  1. This function must comply with the CMDMGR_CmdFuncPtr definition
-*/
-bool PL_SIM_ClearFaultCmd (void* DataObjPtr, const CFE_MSG_Message_t *MsgPtr)
-{
-   
-   PL_SIM_LIB_ClearFault();
-
-   CFE_EVS_SendEvent (PL_SIM_CLEAR_FAULT_CMD_EID, CFE_EVS_EventType_INFORMATION, 
-                      "Payload fault set to FALSE.");
-               
-   return true;
-
-} /* End PL_SIM_ClearFaultCmd() */
-
-
-/******************************************************************************
-** Function: SendStatusTlm
-**
-*/
-static void SendStatusTlm(void)
-{
-
-   /*
-   ** Framework Data
-   */
-   
-   PlSim.StatusTlm.ValidCmdCnt   = PlSim.CmdMgr.ValidCmdCnt;
-   PlSim.StatusTlm.InvalidCmdCnt = PlSim.CmdMgr.InvalidCmdCnt;
-   
-   
-   /*
-   ** PL_SIM Library Data
-   */
-
-   PlSim.StatusTlm.LibPwrState           = PlSim.Lib.State.Power;
-   PlSim.StatusTlm.LibPwrInitCycleCnt    = PlSim.Lib.State.PowerInitCycleCnt;
-   PlSim.StatusTlm.LibPwrResetCycleCnt   = PlSim.Lib.State.PowerResetCycleCnt;
-   PlSim.StatusTlm.LibDetectorFault      = PlSim.Lib.State.DetectorFaultPresent;
-   PlSim.StatusTlm.LibDetectorReadoutRow = PlSim.Lib.Detector.ReadoutRow;
-   PlSim.StatusTlm.LibDetectorImageCnt   = PlSim.Lib.Detector.ImageCnt;
-
-
-   CFE_SB_TimeStampMsg(CFE_MSG_PTR(PlSim.StatusTlm.TelemetryHeader));
-   CFE_SB_TransmitMsg(CFE_MSG_PTR(PlSim.StatusTlm.TelemetryHeader), true);
-
-} /* End SendStatusTlm() */
 
 
 /******************************************************************************
@@ -446,4 +424,37 @@ static int32 ProcessCommands(void)
    return RetStatus;
    
 } /* End ProcessCommands() */
+
+
+/******************************************************************************
+** Function: SendStatusTlm
+**
+*/
+static void SendStatusTlm(void)
+{
+
+   /*
+   ** Framework Data
+   */
+   
+   PlSim.StatusTlm.ValidCmdCnt   = PlSim.CmdMgr.ValidCmdCnt;
+   PlSim.StatusTlm.InvalidCmdCnt = PlSim.CmdMgr.InvalidCmdCnt;
+   
+   
+   /*
+   ** PL_SIM Library Data
+   */
+
+   PlSim.StatusTlm.LibPwrState           = PlSim.Lib.State.Power;
+   PlSim.StatusTlm.LibPwrInitCycleCnt    = PlSim.Lib.State.PowerInitCycleCnt;
+   PlSim.StatusTlm.LibPwrResetCycleCnt   = PlSim.Lib.State.PowerResetCycleCnt;
+   PlSim.StatusTlm.LibDetectorFault      = PlSim.Lib.State.DetectorFaultPresent;
+   PlSim.StatusTlm.LibDetectorReadoutRow = PlSim.Lib.Detector.ReadoutRow;
+   PlSim.StatusTlm.LibDetectorImageCnt   = PlSim.Lib.Detector.ImageCnt;
+
+
+   CFE_SB_TimeStampMsg(CFE_MSG_PTR(PlSim.StatusTlm.TelemetryHeader));
+   CFE_SB_TransmitMsg(CFE_MSG_PTR(PlSim.StatusTlm.TelemetryHeader), true);
+
+} /* End SendStatusTlm() */
 

@@ -1,21 +1,31 @@
 /*
-** Purpose: Define application configurations for the Payload
-**          Simulator application
+**  Copyright 2022 bitValence, Inc.
+**  All Rights Reserved.
 **
-** Notes:
-**   1. These configurations should have an application scope and define
-**      parameters that shouldn't need to change across deployments. If
-**      a change is made to this file or any other app source file during
-**      a deployment then the definition of the OSK_C_DEMO_PLATFORM_REV
-**      macro in osk_c_demo_platform_cfg.h should be updated.
+**  This program is free software; you can modify and/or redistribute it
+**  under the terms of the GNU Affero General Public License
+**  as published by the Free Software Foundation; version 3 with
+**  attribution addendums as found in the LICENSE.txt
 **
-** License:
-**   Written by David McComas, licensed under the copyleft GNU
-**   General Public License (GPL). 
+**  This program is distributed in the hope that it will be useful,
+**  but WITHOUT ANY WARRANTY; without even the implied warranty of
+**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+**  GNU Affero General Public License for more details.
 **
-** References:
-**   1. OpenSatKit Application Developer's Guide.
-**   2. cFS Application Developer's Guide.
+**  Purpose:
+**    Define application configurations for the Payload Simulator app
+**
+**  Notes:
+**    1. These configurations should have an application scope and define
+**       parameters that shouldn't need to change across deployments. If
+**       a change is made to this file or any other app source file during
+**       a deployment then the definition of the OSK_C_DEMO_PLATFORM_REV
+**       macro in osk_c_demo_platform_cfg.h should be updated.
+**
+**  References:
+**    1. OpenSatKit Object-based Application Developer's Guide.
+**    2. cFS Application Developer's Guide.
+**
 */
 #ifndef _app_cfg_
 #define _app_cfg_
@@ -38,8 +48,8 @@
 ** 1.0 - Initial version
 */
 
-#define  PL_SIM_MAJOR_VER   1
-#define  PL_SIM_MINOR_VER   0
+#define  PL_SIM_MAJOR_VER   0
+#define  PL_SIM_MINOR_VER   9
 
 
 /******************************************************************************
