@@ -290,8 +290,8 @@ static int32 InitApp(void)
    if (INITBL_Constructor(&PlSim.IniTbl, PL_SIM_INI_FILENAME, &IniCfgEnum))
    {
    
-      PlSim.CmdMid      = CFE_SB_ValueToMsgId(INITBL_GetIntConfig(INITBL_OBJ, CFG_CMD_MID));
-      PlSim.ExecuteMid  = CFE_SB_ValueToMsgId(INITBL_GetIntConfig(INITBL_OBJ, CFG_EXECUTE_MID));
+      PlSim.CmdMid      = CFE_SB_ValueToMsgId(INITBL_GetIntConfig(INITBL_OBJ, CFG_PL_SIM_CMD_TOPICID));
+      PlSim.ExecuteMid  = CFE_SB_ValueToMsgId(INITBL_GetIntConfig(INITBL_OBJ, CFG_PL_SIM_EXE_TOPICID));
       PlSim.TlmSlowRate = INITBL_GetIntConfig(INITBL_OBJ, CFG_TLM_SLOW_RATE);
 
       Status = CFE_SUCCESS; 
@@ -328,7 +328,9 @@ static int32 InitApp(void)
       ** Initialize app messages 
       */
  
-      CFE_MSG_Init(CFE_MSG_PTR(PlSim.StatusTlm.TelemetryHeader), CFE_SB_ValueToMsgId(INITBL_GetIntConfig(INITBL_OBJ, CFG_TLM_MID)), sizeof(PL_SIM_StatusTlm_t));
+      CFE_MSG_Init(CFE_MSG_PTR(PlSim.StatusTlm.TelemetryHeader), 
+                   CFE_SB_ValueToMsgId(INITBL_GetIntConfig(INITBL_OBJ, CFG_PL_SIM_STATUS_TLM_TOPICID)), 
+                   sizeof(PL_SIM_StatusTlm_t));
 
       /*
       ** Application startup event message
